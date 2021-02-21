@@ -11,35 +11,45 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import sensori.models.Metrics;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import javax.swing.*;
+import java.sql.*;
 import java.util.List;
 
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @Configuration
 public class Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) throws SQLException {
 
-       JdbcTemplate jdbcTemplate = null;
         SpringApplication.run(Application.class, args);
-        Connection c = null;
+
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:C:\\Users\\User\\IdeaProjects\\sensori\\aranet.db");;
+        ResultSet resultSet = null;
+        Statement statement = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:C:/Users/User/IdeaProjects/sensori/aranet.db");
-        } catch ( Exception e ) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-            System.exit(0);
+            connection.setAutoCommit(false);
+            System.out.println("Opened database successfully");
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT * FROM metrics");
+            while (resultSet.next()) {
+                System.out.println("ISBN NAME:"
+                        + resultSet.getString("metric_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+//                resultSet.close();
+//                statement.close();
+//                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println("Opened database successfully");
-        assert false;
-        List<Metrics> sensors = jdbcTemplate.query("SELECT * from sensors",
-                (resultSet, rowNum) -> new Metrics(resultSet.getString("metric_name")));
-
-        sensors.forEach(System.out::println);
     }
+
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder applicationBuilder) {
